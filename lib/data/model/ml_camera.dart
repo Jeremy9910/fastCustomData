@@ -13,7 +13,8 @@ import 'package:flutter_yolov5_app/data/entity/recognition.dart';
 
 final recognitionsProvider = StateProvider<List<Recognition>>((ref) => []);
 
-final mlCameraProvider = FutureProvider.autoDispose.family<MLCamera, Size>((ref, size) async {
+final mlCameraProvider =
+    FutureProvider.autoDispose.family<MLCamera, Size>((ref, size) async {
   final cameras = await availableCameras();
   final cameraController = CameraController(
     cameras[0],
@@ -31,10 +32,10 @@ final mlCameraProvider = FutureProvider.autoDispose.family<MLCamera, Size>((ref,
 
 class MLCamera {
   MLCamera(
-      this._read,
-      this.cameraController,
-      this.cameraViewSize,
-      ) {
+    this._read,
+    this.cameraController,
+    this.cameraViewSize,
+  ) {
     Future(() async {
       classifier = Classifier();
       await cameraController.startImageStream(onCameraAvailable);
@@ -73,14 +74,16 @@ class MLCamera {
       cameraImage: cameraImage,
       interpreterAddress: classifier.interpreter!.address,
     );
-    _read(recognitionsProvider.notifier).state = await compute(inference, isolateCamImgData);
+    final stopwatch = Stopwatch()..start();
+    _read(recognitionsProvider.notifier).state =
+        await compute(inference, isolateCamImgData);
+    print('Elapse: ${stopwatch.elapsed}');
     isPredicting = false;
   }
 
   /// inference function
   static Future<List<Recognition>> inference(
-      IsolateData isolateCamImgData
-      ) async {
+      IsolateData isolateCamImgData) async {
     var image = ImageUtils.convertYUV420ToImage(
       isolateCamImgData.cameraImage,
     );
@@ -93,7 +96,6 @@ class MLCamera {
         isolateCamImgData.interpreterAddress,
       ),
     );
-
     return classifier.predict(image);
   }
 }
